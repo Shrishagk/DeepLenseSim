@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-
+import os
 from deeplense.lens import DeepLens
 
 
@@ -19,8 +19,12 @@ for i in range(num_sim):
     lens.make_source_light_mag()
     lens.simple_sim_2()
     File = np.array([lens.image_real,axion_masses[i]])
-    np.save('/users/mtoomey/scratch/deeplense/Model_III_test/axion/axion_sim_' + str(random.getrandbits(128)),File)
 
+    # This tells the computer: "Start where this script is, then find the data folder."
+    base_path = os.path.join(os.getcwd(), 'data', 'Model_I', 'axion')
+
+    # This creates the folder if it doesn't exist yet
+    os.makedirs(base_path, exist_ok=True)
 
 
 if False:
