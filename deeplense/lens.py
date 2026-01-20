@@ -4,7 +4,8 @@ from astropy.cosmology import FlatLambdaCDM
 from astropy import units as u
 from astropy.constants import G, c, M_sun
 
-from pyHalo.preset_models import CDM
+from pyHalo.preset_models import preset_model_from_name
+CDM = preset_model_from_name('CDM')
 
 
 from lenstronomy.LightModel.light_model import LightModel
@@ -276,41 +277,68 @@ class DeepLens(object):
         data_class.update_data(image_real)
         kwargs_data['image_data'] = image_real
 
-    def simple_sim_2(self):
-        """
-            Same structure as simple_sim but with Euclid resolution
-        """
-        from lenstronomy.SimulationAPI.sim_api import SimAPI
+    def simple_sim_2(self, numpix=128):
 
-        kwargs_model_physical = {'lens_model_list': self.lens_model_list,  # list of lens models to be used
-                              'lens_redshift_list': self.lens_redshift_list,  # list of redshift of the deflections
-                              'source_light_model_list': self.source_model_list,  # list of extended source models to be used
-                              'source_redshift_list': self.source_redshift_list,  # list of redshfits of the sources in same order as source_light_model_list
-                              'cosmo': self.astropy_instance,  # astropy.cosmology instance
-                              'z_source_convention': 2.5,
-                              'z_source': 1.0,} 
+            from lenstronomy.SimulationAPI.sim_api import SimAPI
 
-        
-        #######################################################################
-        numpix = 64  # number of pixels per axis of the image to be modelled
-    
-        # here we define the numerical options used in the ImSim module. 
-        # Have a look at the ImageNumerics class for detailed descriptions.
-        # If not further specified, the default settings are used.
-        kwargs_numerics = {'point_source_supersampling_factor': 1}
+            # -------------------------------------------------------
+            # Instrument configuration (REQUIRED by lenstronomy)
+            # -------------------------------------------------------
+            if not hasattr(self, "kwargs_single_band"):
+                self.kwargs_single_band = {
+                    'pixel_scale': 0.05,              # arcsec / pixel
+                    'exposure_time': 1000.0,          # seconds
+                    'magnitude_zero_point': 25.0,
+                    'psf_type': 'GAUSSIAN',
+                    'seeing': 0.1,                    # arcsec
+                    'read_noise': 5.0,                # electrons (CRITICAL FIX)
+                    'ccd_gain': 1.0,                  # electrons / ADU
+                    'background_noise': 0.0           # turn off sky noise
+                }
 
-        #######################################################################
-        sim = SimAPI(numpix=numpix, kwargs_single_band=self.kwargs_single_band, kwargs_model=kwargs_model_physical)
-        imSim = sim.image_model_class(kwargs_numerics)
-                   
-        _, kwargs_source, _ = sim.magnitude2amplitude(None,self.kwargs_source)
+            # -------------------------------------------------------
+            # Physical model
+            # -------------------------------------------------------
+            kwargs_model_physical = {
+                'lens_model_list': self.lens_model_list,
+                'lens_redshift_list': self.lens_redshift_list,
+                'source_light_model_list': self.source_model_list,
+                'source_redshift_list': self.source_redshift_list,
+                'cosmo': self.astropy_instance,
+                'z_source_convention': 2.5,
+                'z_source': 1.0,
+            }
 
+            # -------------------------------------------------------
+            # Image simulation
+            # -------------------------------------------------------
+            numpix = 64
+            kwargs_numerics = {'point_source_supersampling_factor': 1}
 
-        image = imSim.image(self.kwargs_lens_list,kwargs_source,None)
+            sim = SimAPI(
+                numpix=numpix,
+                kwargs_single_band=self.kwargs_single_band,
+                kwargs_model=kwargs_model_physical
+            )
 
-        self.image_model = image
-        self.poisson = sim.noise_for_model(model=image)
-        self.image_real = self.image_model + self.image_model
+            imSim = sim.image_model_class(kwargs_numerics)
+
+            _, kwargs_source, _ = sim.magnitude2amplitude(
+                None, self.kwargs_source
+            )
+
+            image = imSim.image(
+                self.kwargs_lens_list,
+                kwargs_source,
+                None
+            )
+
+            # -------------------------------------------------------
+            # Outputs
+            # -------------------------------------------------------
+            self.image_model = image
+            self.poisson = sim.noise_for_model(model=image)
+            self.image_real = self.image_model + self.poisson
 
     def set_instrument(self,inst_name):
         """

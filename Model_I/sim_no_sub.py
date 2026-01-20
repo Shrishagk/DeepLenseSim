@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import os
 
 from deeplense.lens import DeepLens
 
@@ -15,8 +16,8 @@ for i in range(num_sim):
     lens.make_source_light()
     lens.simple_sim()
     File = lens.image_real
-    np.save('/users/mtoomey/scratch/deeplense/Model_I_test/no_sub/no_sub_sim_' + str(random.getrandbits(128)),File)
-
+    base_path = os.path.join(os.getcwd(), 'data', 'Model_I', 'axion')
+    os.makedirs(base_path, exist_ok=True)
 
 
 if False:

@@ -4,6 +4,11 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import h5py
 import random
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+data_root = os.path.join(script_dir, 'data_model_4')
 
 # lenstronomy module import
 import lenstronomy.Util.data_util as data_util
@@ -192,6 +197,13 @@ img_zp1 = images_ref[indx_img_zp1]
 arr = [2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,54,55]
 #################################################
 
+# Create the folders if they don't exist
+cdm_val_path = os.path.join(data_root, 'val', 'cdm')
+cdm_train_path = os.path.join(data_root, 'train', 'cdm')
+os.makedirs(cdm_val_path, exist_ok=True)
+os.makedirs(cdm_train_path, exist_ok=True)
+
+filename = f"sim_{random.getrandbits(128)}.npy"
 number_of_sims = int(2.5e4)
 
 for i in range(number_of_sims):
@@ -201,8 +213,10 @@ for i in range(number_of_sims):
 
     sim = simulate(img_zp1[arr[index]],sigma_v,source_pos_xx,source_pos_yy,source_ang)
 
-    if i % 10 == 0:
-        np.save('val/cdm/sim_'+ str(random.getrandbits(128)),(np.array(sim).clip(min=0)/np.max(sim)),allow_pickle=True)
-    else:
-        np.save('train/cdm/sim_'+ str(random.getrandbits(128)),(np.array(sim).clip(min=0)/np.max(sim)),allow_pickle=True)
 
+    if i % 10 == 0:
+        save_path = os.path.join(cdm_val_path, filename)
+    else:
+        save_path = os.path.join(cdm_train_path, filename)
+
+    np.save(save_path, (np.array(sim).clip(min=0)/np.max(sim)), allow_pickle=True)
