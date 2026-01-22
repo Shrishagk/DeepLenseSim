@@ -35,7 +35,13 @@ kwargs_r_band = Euclid_r.kwargs_single_band()
 Euclid_i = Euclid(band='VIS', psf_type='GAUSSIAN', coadd_years=6)
 kwargs_i_band = Euclid_i.kwargs_single_band()
 
-from pyHalo.preset_models import CDM
+try:
+    # Try the old import style first
+    from pyHalo.preset_models import CDM
+except ImportError:
+    # If that fails, use the new factory method
+    from pyHalo.preset_models import preset_model_from_name
+    CDM = preset_model_from_name('CDM')
 from pyHalo.Halos.lens_cosmo import LensCosmo
 from pyHalo.single_realization import SingleHalo
 

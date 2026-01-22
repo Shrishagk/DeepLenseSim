@@ -19,7 +19,14 @@ from lenstronomy.SimulationAPI.sim_api import SimAPI
 from lenstronomy.LightModel.Profiles.gaussian import GaussianEllipse
 gauss = GaussianEllipse()
 
-from pyHalo.realization_extensions.uldm import ULDM
+try:
+    from pyHalo.preset_models import preset_model_from_name
+    # Use the factory function to get ULDM
+    ULDM = preset_model_from_name('ULDM')
+except Exception as e:
+    # If that also fails, we'll need to see the specific error
+    print(f"Failed to load ULDM: {e}")
+    raise
 
 
 # Define a specific cosmology
@@ -37,7 +44,14 @@ kwargs_r_band = Euclid_r.kwargs_single_band()
 Euclid_i = Euclid(band='VIS', psf_type='GAUSSIAN', coadd_years=6)
 kwargs_i_band = Euclid_i.kwargs_single_band()
 
-from pyHalo.preset_models import ULDM
+try:
+    from pyHalo.preset_models import preset_model_from_name
+    # Use the factory function to get ULDM
+    ULDM = preset_model_from_name('ULDM')
+except Exception as e:
+    # If that also fails, we'll need to see the specific error
+    print(f"Failed to load ULDM: {e}")
+    raise
 from pyHalo.Halos.lens_cosmo import LensCosmo
 from pyHalo.single_realization import SingleHalo
 
